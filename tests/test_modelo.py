@@ -7,6 +7,8 @@ import pytest
 
 from src.motor.modelo import Despesa, Parecer, Resultado, Solicitacao, Status
 
+from tests.fabricas import politica_padrao
+
 
 def _despesa(**overrides):
     base = dict(
@@ -57,7 +59,7 @@ def test_modelo_e_imutavel_para_solicitacao_e_resultado():
     with pytest.raises(FrozenInstanceError):
         solicitacao.competencia = "2026-08"  # type: ignore[misc]
 
-    resultado = Resultado(solicitacao=solicitacao, pareceres=())
+    resultado = Resultado(solicitacao=solicitacao, politica=politica_padrao(), pareceres=())
     with pytest.raises(FrozenInstanceError):
         resultado.pareceres = ()  # type: ignore[misc]
 
@@ -85,6 +87,7 @@ def test_total_reembolsavel_e_propriedade_calculada_nao_campo():
     )
     resultado = Resultado(
         solicitacao=_solicitacao([despesa_aprovada, despesa_parcial]),
+        politica=politica_padrao(),
         pareceres=(parecer_aprovado, parecer_parcial),
     )
 
