@@ -218,15 +218,15 @@ a ordem de aplicação da spec §8.
 > §3 são reescritas declarando o item fora de escopo desta entrega — nunca
 > deixadas descrevendo um comportamento que o código não tem.
 
-- [ ] **T-035** — Enum `Estado` (`aprovacao_automatica` / `pendente_aprovacao`) em `motor/modelo.py`; campo `estado` em `Parecer`; `rn_013_fila_aprovacao(parecer, contexto)` como passo pós-decisão (não recusa, não altera valor)
+- [x] **T-035** — Enum `Estado` (`aprovacao_automatica` / `pendente_aprovacao`) em `motor/modelo.py`; campo `estado` em `Parecer`; `rn_013_fila_aprovacao(parecer, contexto)` como passo pós-decisão (não recusa, não altera valor)
   - **Atende:** RN-013, AMB-024
   - **Aceite:** `test_rn_013_acima_de_500_fica_pendente`, `test_rn_013_exatamente_500_nao_fica_pendente`, `test_rn_013_estorno_nunca_fica_pendente`
-  - **Commit:** `<preencher>`
+  - **Commit:** `73bcc99` (test) / `ef30842` (feat) — Fase 8 completada (não cortada): a Fase 7 fechou inteiramente verde antes de começar, como o `docs/HANDOFF-dia2.md` exigia
 
-- [ ] **T-036** — Saída ganha `itens[].estado`, `resumo.quantidade_por_estado`, `resumo.total_pendente_aprovacao`
+- [x] **T-036** — Saída ganha `itens[].estado`, `resumo.quantidade_por_estado`, `resumo.total_pendente_aprovacao`
   - **Atende:** RN-013, `spec.md` §4 (saída)
   - **Aceite:** `test_resumo_conta_pendencias`; `test_e2e_envelope_cc_comercial` passa a conferir que `e-007` sai com estado `pendente_aprovacao`
-  - **Commit:** `<preencher>`
+  - **Commit:** `7f96a53` (test) / `b86ee76` (feat)
 
 ---
 
