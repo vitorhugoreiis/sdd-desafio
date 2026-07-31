@@ -179,10 +179,10 @@ a ordem de aplicação da spec §8.
   - **Aceite:** `test_ordem_conversao_antes_da_nota_fiscal`, `test_pipeline_e_uma_lista_unica`
   - **Commit:** `4a2ef59` (test) / `5a45017` (feat)
 
-- [ ] **T-030** — RN-011 completa: converte o valor de origem pela taxa, arredonda uma única vez (RN-010 estendida, AMB-020), preenche `valor_origem`/`taxa_cambio`/`data_taxa` na `Despesa` resultante. Moeda sem cotação (AMB-019) recusa com valor `0.00` em BRL e origem preservada
+- [x] **T-030** — RN-011 completa: converte o valor de origem pela taxa, arredonda uma única vez (RN-010 estendida, AMB-020), preenche `valor_origem`/`taxa_cambio`/`data_taxa` na `Despesa` resultante. Moeda sem cotação (AMB-019) recusa com valor `0.00` em BRL e origem preservada
   - **Atende:** RN-010, RN-011, AMB-020, AMB-023
   - **Aceite:** `test_rn_011_moeda_sem_cotacao_e_recusada`, `test_rn_011_arredonda_valor_convertido`, `test_rn_011_item_nao_convertivel_nao_polui_total`
-  - **Commit:** `<preencher>`
+  - **Commit:** `ac6d911` (test) — **sem commit `feat` separado.** `rn_011_conversao_cambial` já saiu completa em T-029 (`5a45017`), porque `test_ordem_conversao_antes_da_nota_fiscal` só é um teste de ordem significativo se a conversão já converte de verdade. T-030 mediu essa cobertura com testes novos e nenhum passou a exigir código adicional — a arquitetura (DT-007) absorveu esta task de graça
 
 - [ ] **T-031** — RN-004 passa a incluir `moeda` na chave de duplicata (AMB-022); RN-006 compara o piso ao valor já convertido em reais (AMB-021); o serializador emite `moeda`/`valor_origem`/`taxa_cambio`/`data_taxa` por item e o bloco `politica` no cabeçalho
   - **Atende:** RN-004, RN-006, AMB-021, AMB-022, `spec.md` §4 (saída)
