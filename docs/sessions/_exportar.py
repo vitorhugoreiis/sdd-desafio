@@ -25,6 +25,7 @@ ROTULOS = {
     "b2a2418d": "02-especificacao-spec-plan-tasks",
     "da3fa182": "03-implementacao-t001-t022",
     "a842a256": "04-plano-envelope-dia2",
+    "4039fd5a": "05-execucao-envelope-t023-t036",
 }
 
 RUIDO = ("system-reminder", "ide_selection", "ide_opened_file", "local-command-caveat")
