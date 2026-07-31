@@ -1,21 +1,25 @@
-"""Uma função pura por regra de negócio, na ordem da spec.md §8 (DT-002).
+"""Um passo por regra de negócio, na ordem da spec.md §8 (DT-002, DT-007).
 
-Cada regra de decisão tem assinatura `(Despesa, Contexto) -> Parecer | None`,
-onde `None` significa "não decidi, siga para a próxima". `normalizar_categoria`
-é a exceção: é o passo 2 (transformação, não decisão) e devolve uma nova
-`Despesa`, não um `Parecer`.
+Cada passo do pipeline tem assinatura `(Despesa, Contexto) -> Parecer |
+Despesa | None` (DT-007): `None` significa "não decidi, siga para a
+próxima"; `Parecer` significa "decidi, pare"; `Despesa` significa "transformei
+a despesa, continue com esta a partir daqui". `normalizar_categoria` (RN-002)
+e `rn_011_conversao_cambial` (RN-011) são os dois passos que transformam;
+todos os demais só decidem.
 """
 from collections.abc import Callable
 from dataclasses import replace
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 
+from src.motor.cambio import TabelaCambio
 from src.motor.modelo import Contexto, Despesa, Parecer, Status
 from src.motor.politica import Politica
 
 ZERO = Decimal("0.00")
+DUAS_CASAS = Decimal("0.01")
 
 
-def normalizar_categoria(despesa: Despesa) -> Despesa:
+def normalizar_categoria(despesa: Despesa, contexto: Contexto | None = None) -> Despesa:
     """RN-002 — ignora caixa e espaços nas pontas antes de qualquer decisão."""
     categoria_normalizada = despesa.categoria.strip().lower()
     if categoria_normalizada == despesa.categoria:
@@ -120,8 +124,45 @@ def rn_006_nota_fiscal(despesa: Despesa, contexto: Contexto) -> Parecer | None:
     )
 
 
+def rn_011_conversao_cambial(despesa: Despesa, contexto: Contexto) -> Parecer | Despesa | None:
+    """RN-011 — converte para reais pela taxa da data da despesa, com
+    retrocesso para a última cotação anterior disponível (AMB-018). Sem
+    nenhuma cotação anterior, ou moeda ausente da tabela (AMB-019), recusa
+    com o valor de origem preservado no item.
+
+    É o único passo, além de RN-002, que transforma a despesa em vez de só
+    decidir (DT-007) — por isso pode devolver `Despesa` além de `Parecer`.
+    """
+    if despesa.moeda == "BRL":
+        return None
+
+    encontrada = contexto.tabela_cambio.taxa(despesa.moeda, despesa.data)
+    if encontrada is None:
+        despesa_sem_valor_em_brl = replace(despesa, valor=ZERO)
+        return Parecer(
+            despesa=despesa_sem_valor_em_brl,
+            valor_reembolsavel=ZERO,
+            status=Status.RECUSADA,
+            regras_aplicadas=("RN-011",),
+            justificativa=(
+                f"Sem cotacao de cambio disponivel para {despesa.moeda} "
+                f"ate a data {despesa.data.isoformat()}."
+            ),
+        )
+
+    taxa, data_taxa = encontrada
+    # AMB-020/RN-010: um unico arredondamento, meio para cima, logo apos a
+    # conversao — a taxa e o valor de origem nao sao arredondados antes disso.
+    valor_convertido = (despesa.valor_origem * taxa).quantize(DUAS_CASAS, rounding=ROUND_HALF_UP)
+    return replace(despesa, valor=valor_convertido, taxa_cambio=taxa, data_taxa=data_taxa)
+
+
 def construir_contexto(
-    despesas: tuple[Despesa, ...], competencia: str, centro_custo: str, politica: Politica
+    despesas: tuple[Despesa, ...],
+    competencia: str,
+    centro_custo: str,
+    politica: Politica,
+    tabela_cambio: TabelaCambio,
 ) -> Contexto:
     """RN-009 — viagem é inferida por hospedagem na mesma data, aprovada,
     recusada ou com limite R$ 0,00 (AMB-006, AMB-015). Calculada uma vez
@@ -134,6 +175,7 @@ def construir_contexto(
         competencia=competencia,
         centro_custo=centro_custo,
         politica=politica,
+        tabela_cambio=tabela_cambio,
         datas_em_viagem=datas_em_viagem,
     )
 

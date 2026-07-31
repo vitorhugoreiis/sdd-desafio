@@ -4,6 +4,7 @@ from datetime import date
 from decimal import Decimal
 from enum import Enum
 
+from src.motor.cambio import TabelaCambio
 from src.motor.politica import Politica
 
 
@@ -47,6 +48,7 @@ class Contexto:
     competencia: str
     centro_custo: str
     politica: Politica
+    tabela_cambio: TabelaCambio
     datas_em_viagem: frozenset[date] = field(default_factory=frozenset)
 
 
