@@ -196,20 +196,20 @@ a ordem de aplicação da spec §8.
 > conferem os três totais registrados em D-002/D-003 e na memória de cálculo
 > de `docs/HANDOFF-dia2.md`, item a item, antes de qualquer trabalho opcional.
 
-- [ ] **T-032** — Atualiza `test_e2e_exemplo_oficial` para os valores da v1.2 (**R$ 341,93** sobre R$ 1.816,84), com comentário citando D-002
+- [x] **T-032** — Atualiza `test_e2e_exemplo_oficial` para os valores da v1.2 (**R$ 341,93** sobre R$ 1.816,84), com comentário citando D-002
   - **Atende:** `spec.md` §9
   - **Aceite:** `test_e2e_exemplo_oficial` verde nos novos números, incluindo `d-001` (72,50, integral), `d-010` (0,00) e `d-014` (61,00, integral)
-  - **Commit:** `<preencher>`
+  - **Commit:** `2d17be1` (test) — **sem `feat` separado.** Trocar a política de teste pela `politica-v4.json` real bateu exatamente com os R$ 341,93 calculados à mão no anexo do `docs/HANDOFF-dia2.md`, sem precisar tocar em código de produção — a arquitetura (política externa, DT-008) absorveu a task de graça
 
-- [ ] **T-033** — Testes ponta a ponta novos sobre os dois arquivos de `exemplos/envelope/`
+- [x] **T-033** — Testes ponta a ponta novos sobre os dois arquivos de `exemplos/envelope/`
   - **Atende:** `spec.md` §9
   - **Aceite:** `test_e2e_envelope_cc_comercial` (R$ 1.343,26 sobre R$ 2.457,52), `test_e2e_envelope_cc_desconhecido` (R$ 433,76 sobre R$ 623,76)
-  - **Commit:** `<preencher>`
+  - **Commit:** `d399bed` (test) — sem `feat` separado, mesmo motivo de T-032: os dois arquivos bateram de primeira
 
-- [ ] **T-034** — Casos de borda novos da spec §7 (v1.2) em `test_casos_de_borda.py`; os casos já existentes usam `centro_custo: "CC"` (ausente da tabela ⇒ padrão) e continuam válidos sem alteração de valor
+- [x] **T-034** — Casos de borda novos da spec §7 (v1.2) em `test_casos_de_borda.py`; os casos já existentes usam `centro_custo: "CC"` (ausente da tabela ⇒ padrão) e continuam válidos sem alteração de valor
   - **Atende:** `spec.md` §7
-  - **Aceite:** `test_casos_de_borda` com as linhas novas (limite zero, CC desconhecido, categoria só existente num CC, moeda sem cotação, fronteira de R$ 500,00); contador de casos atualizado
-  - **Commit:** `<preencher>`
+  - **Aceite:** `test_casos_de_borda` com as linhas novas (limite zero, CC desconhecido, categoria só existente num CC, moeda sem cotação); contador atualizado de 18 para 22
+  - **Commit:** `eb2d12c` (test) — sem `feat` separado. **Desvio:** a linha de fronteira R$ 500,00/500,01 (RN-013) não entrou aqui — RN-013 ainda não existe nesta fase; ela pertence aos testes de T-035, na Fase 8, para não testar um campo (`estado`) que o código ainda não tem
 
 ## Fase 8 — Fila de aprovação manual (T-035..T-036) — opcional
 
