@@ -6,6 +6,7 @@ das regras é reordenar esta lista, não reescrever `if`s aninhados (DT-002).
 para nela quando nenhuma regra anterior recusou.
 """
 from src.motor.modelo import Parecer, Resultado, Solicitacao
+from src.motor.politica import Politica
 from src.motor.regras import (
     construir_contexto,
     criar_rn_004_duplicata,
@@ -18,8 +19,9 @@ from src.motor.regras import (
 )
 
 
-def calcular(solicitacao: Solicitacao) -> Resultado:
-    contexto = construir_contexto(solicitacao.despesas, solicitacao.competencia)
+def calcular(solicitacao: Solicitacao, politica: Politica) -> Resultado:
+    centro_custo = solicitacao.colaborador["centro_custo"]
+    contexto = construir_contexto(solicitacao.despesas, solicitacao.competencia, centro_custo, politica)
     regras_decisao = (
         rn_003_competencia,
         rn_001_categoria_coberta,

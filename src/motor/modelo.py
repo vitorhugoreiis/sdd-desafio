@@ -4,6 +4,8 @@ from datetime import date
 from decimal import Decimal
 from enum import Enum
 
+from src.motor.politica import Politica
+
 
 class Status(Enum):
     APROVADA = "aprovada"
@@ -35,6 +37,8 @@ class Solicitacao:
 @dataclass(frozen=True)
 class Contexto:
     competencia: str
+    centro_custo: str
+    politica: Politica
     datas_em_viagem: frozenset[date] = field(default_factory=frozenset)
 
 
