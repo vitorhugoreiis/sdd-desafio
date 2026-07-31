@@ -6,7 +6,7 @@ from src.io.serializador import para_documento
 from src.motor.calculadora import calcular
 from src.motor.modelo import Solicitacao
 
-from tests.fabricas import despesa, politica_padrao
+from tests.fabricas import despesa, politica_padrao, tabela_cambio
 
 
 def _solicitacao(despesas):
@@ -25,7 +25,7 @@ def test_soma_dos_itens_bate_com_o_resumo():
         despesa(id="d-2", categoria="coworking", valor=Decimal("89.00")),
         despesa(id="d-3", categoria="transporte_urbano", valor=Decimal("-45.00")),
     ]
-    resultado = calcular(_solicitacao(despesas), politica_padrao())
+    resultado = calcular(_solicitacao(despesas), politica_padrao(), tabela_cambio())
     documento = para_documento(resultado)
 
     soma_itens = sum(Decimal(item["valor_reembolsavel"]) for item in documento["itens"])
@@ -36,7 +36,7 @@ def test_soma_dos_itens_bate_com_o_resumo():
 
 def test_resumo_total_glosado_e_diferenca_entre_lancado_e_reembolsavel():
     despesas = [despesa(id="d-1", categoria="alimentacao", valor=Decimal("72.50"))]
-    resultado = calcular(_solicitacao(despesas), politica_padrao())
+    resultado = calcular(_solicitacao(despesas), politica_padrao(), tabela_cambio())
     documento = para_documento(resultado)
 
     lancado = Decimal(documento["resumo"]["total_lancado"])
@@ -52,7 +52,7 @@ def test_resumo_quantidade_por_status_soma_o_total_de_itens():
         despesa(id="d-2", categoria="coworking", valor=Decimal("89.00")),
         despesa(id="d-3", categoria="transporte_urbano", valor=Decimal("-45.00")),
     ]
-    resultado = calcular(_solicitacao(despesas), politica_padrao())
+    resultado = calcular(_solicitacao(despesas), politica_padrao(), tabela_cambio())
     documento = para_documento(resultado)
 
     assert sum(documento["resumo"]["quantidade_por_status"].values()) == len(documento["itens"])

@@ -5,7 +5,7 @@ from decimal import Decimal
 from src.motor.calculadora import calcular
 from src.motor.modelo import Solicitacao, Status
 
-from tests.fabricas import politica_padrao
+from tests.fabricas import politica_padrao, tabela_cambio
 
 
 def test_lista_vazia_produz_resultado_valido():
@@ -17,7 +17,7 @@ def test_lista_vazia_produz_resultado_valido():
         despesas=(),
     )
 
-    resultado = calcular(solicitacao, politica_padrao())
+    resultado = calcular(solicitacao, politica_padrao(), tabela_cambio())
 
     assert resultado.pareceres == ()
     assert resultado.total_lancado == Decimal("0.00")

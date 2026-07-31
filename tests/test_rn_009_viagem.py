@@ -7,6 +7,7 @@ viagem (AMB-015) — o indício é o pernoite, não o pagamento.
 from datetime import date
 from decimal import Decimal
 
+from src.motor.cambio import TabelaCambio
 from src.motor.modelo import Status
 from src.motor.politica import LimiteCategoria
 from src.motor.regras import construir_contexto, rn_006_nota_fiscal, rn_007_teto_categoria
@@ -17,7 +18,13 @@ DATA_VIAGEM = date(2026, 7, 14)
 
 
 def _contexto_de(despesas, *, politica=None, centro_custo="CC-TESTE"):
-    return construir_contexto(despesas, competencia="2026-07", centro_custo=centro_custo, politica=politica or politica_padrao())
+    return construir_contexto(
+        despesas,
+        competencia="2026-07",
+        centro_custo=centro_custo,
+        politica=politica or politica_padrao(),
+        tabela_cambio=TabelaCambio(taxas={}),
+    )
 
 
 def test_rn_009_data_com_hospedagem_amplia_tetos():

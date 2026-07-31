@@ -1,7 +1,8 @@
-"""Fábricas de Despesa, Política e Contexto para os testes (DT-006, plan.md §6)."""
+"""Fábricas de Despesa, Política, Câmbio e Contexto para os testes (DT-006, plan.md §6)."""
 from datetime import date
 from decimal import Decimal
 
+from src.motor.cambio import TabelaCambio
 from src.motor.modelo import Contexto, Despesa
 from src.motor.politica import LimiteCategoria, Politica
 
@@ -21,6 +22,10 @@ def despesa(
     fornecedor="Fornecedor Teste",
     valor=Decimal("50.00"),
     tem_nota_fiscal=True,
+    moeda="BRL",
+    valor_origem=None,
+    taxa_cambio=None,
+    data_taxa=None,
 ) -> Despesa:
     return Despesa(
         id=id,
@@ -30,6 +35,10 @@ def despesa(
         fornecedor=fornecedor,
         valor=valor,
         tem_nota_fiscal=tem_nota_fiscal,
+        moeda=moeda,
+        valor_origem=valor_origem,
+        taxa_cambio=taxa_cambio,
+        data_taxa=data_taxa,
     )
 
 
@@ -55,16 +64,22 @@ def politica_padrao(
     )
 
 
+def tabela_cambio(*, taxas=None) -> TabelaCambio:
+    return TabelaCambio(taxas=taxas or {})
+
+
 def contexto(
     *,
     competencia="2026-07",
     datas_em_viagem=frozenset(),
     centro_custo="CC-TESTE",
     politica=None,
+    tabela_cambio=None,
 ) -> Contexto:
     return Contexto(
         competencia=competencia,
         datas_em_viagem=datas_em_viagem,
         centro_custo=centro_custo,
         politica=politica if politica is not None else politica_padrao(),
+        tabela_cambio=tabela_cambio if tabela_cambio is not None else TabelaCambio(taxas={}),
     )

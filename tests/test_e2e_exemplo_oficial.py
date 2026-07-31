@@ -5,7 +5,7 @@ from pathlib import Path
 from src.io.carregador import carregar
 from src.motor.calculadora import calcular
 
-from tests.fabricas import politica_padrao
+from tests.fabricas import politica_padrao, tabela_cambio
 
 CAMINHO_EXEMPLO = Path(__file__).resolve().parent.parent / "exemplos" / "despesas-exemplo.json"
 
@@ -18,7 +18,7 @@ def test_e2e_exemplo_oficial():
     # T-025: politica de teste (equivalente a v3) ate a Fase 7 (T-032)
     # trocar pela politica-v4.json real e os numeros de D-002 (703.43 -> 341.93).
     solicitacao = carregar(str(CAMINHO_EXEMPLO))
-    resultado = calcular(solicitacao, politica_padrao())
+    resultado = calcular(solicitacao, politica_padrao(), tabela_cambio())
 
     assert resultado.total_lancado == Decimal("1816.84")
     assert resultado.total_reembolsavel == Decimal("703.43")
@@ -39,7 +39,7 @@ def test_e2e_exemplo_oficial():
 
 def test_e2e_soma_dos_itens_bate_com_o_resumo():
     solicitacao = carregar(str(CAMINHO_EXEMPLO))
-    resultado = calcular(solicitacao, politica_padrao())
+    resultado = calcular(solicitacao, politica_padrao(), tabela_cambio())
 
     soma = sum((parecer.valor_reembolsavel for parecer in resultado.pareceres), Decimal("0.00"))
     assert soma == resultado.total_reembolsavel
