@@ -135,10 +135,97 @@ a ordem de aplicação da spec §8.
 
 ---
 
-## Fase 5 — Envelope (criar no Dia 2)
+## Fase 5 — Política externa por centro de custo (T-023..T-026)
 
-<Novas tasks a partir da mudança de requisito. Numeração continua de T-023 —
-não reinicie e não renumere as antigas: a numeração é o eixo da rastreabilidade.>
+> Absorve o bloco A do envelope do Dia 2 (`exemplos/envelope/00-ENVELOPE-LACRADO.md`),
+> registrado em D-002 (`DECISIONS.md`). Derivado de `spec.md` 1.2 e `plan.md` 1.1.
+
+- [ ] **T-023** — `motor/politica.py` deixa de expor constantes e passa a expor `Politica` e `LimiteCategoria` (`@dataclass(frozen=True)`), com `limite(centro_custo, categoria) -> Decimal | None` fazendo o merge `{**padrao, **centros_custo.get(cc, {})}` e `categorias_cobertas(centro_custo)`
+  - **Atende:** RN-012, AMB-013, AMB-014, `plan.md` §4
+  - **Aceite:** `test_rn_012_cc_desconhecido_usa_padrao`, `test_rn_012_categoria_ausente_no_cc_herda_padrao`, `test_rn_012_cc_sobrepoe_o_padrao`
+  - **Commit:** `<preencher>`
+
+- [ ] **T-024** — `io/carregador_politica.py`: lê o documento de política e monta uma `Politica`, com `parse_float=Decimal`, validação nomeando o campo ausente (mesmo padrão de `ErroDeEntrada` do `io/carregador.py`); `acrescimo_em_viagem_percentual: 50` vira fator `1.5`
+  - **Atende:** `spec.md` §4 (documento de política), `plan.md` DT-008
+  - **Aceite:** `test_carregador_politica_rejeita_campo_ausente`, `test_carregador_politica_converte_percentual_em_fator`
+  - **Commit:** `<preencher>`
+
+- [ ] **T-025** — `Contexto` ganha `centro_custo` e `politica`. RN-001 e RN-007 passam a consultar a política em vez de constantes; limite `0.00` recusa (RN-012, AMB-014); RN-009 lê o fator de viagem da política
+  - **Atende:** RN-001, RN-007, RN-009, RN-012
+  - **Aceite:** `test_rn_012_limite_zero_recusa`, `test_rn_001_representacao_coberta_apenas_no_cc_comercial`, `test_rn_009_fator_vem_da_politica`
+  - **Commit:** `<preencher>`
+
+- [ ] **T-026** — CLI ganha `--politica` **opcional**, com default resolvido a partir da raiz do pacote (não do diretório de trabalho), apontando para a tabela vigente. Preserva o contrato fixo `calcular --input X --output Y` do `DESAFIO.md` — os casos ocultos do instrutor rodam sem flag nova
+  - **Atende:** `DESAFIO.md` (contrato fixo da CLI), `plan.md` §1
+  - **Aceite:** `test_cli_usa_politica_padrao_sem_flag`, `test_cli_aceita_politica_alternativa`
+  - **Commit:** `<preencher>`
+
+## Fase 6 — Despesas internacionais (T-027..T-031)
+
+> Absorve o bloco B do envelope, registrado em D-003 (`DECISIONS.md`).
+
+- [ ] **T-027** — `Despesa` ganha `moeda`, `valor_origem`, `taxa_cambio`, `data_taxa`. O carregador de despesas lê `moeda` como campo opcional, default `BRL`, normalizada (caixa/espaços)
+  - **Atende:** `spec.md` §4 (entrada), `plan.md` §3
+  - **Aceite:** `test_carregador_moeda_ausente_assume_brl`, `test_carregador_normaliza_codigo_de_moeda`
+  - **Commit:** `<preencher>`
+
+- [ ] **T-028** — `motor/cambio.py` puro: `TabelaCambio.taxa(moeda, data) -> tuple[Decimal, date] | None`, retrocedendo para a última data que tenha aquela moeda. `io/carregador_cambio.py` lê o documento de câmbio; CLI ganha `--cambio` opcional, mesmo padrão de default da T-026
+  - **Atende:** RN-011, AMB-018, AMB-019, `plan.md` DT-008
+  - **Aceite:** `test_rn_011_taxa_da_data_exata`, `test_rn_011_data_sem_cotacao_usa_ultima_anterior`, `test_rn_011_sem_cotacao_anterior_recusa`
+  - **Commit:** `<preencher>`
+
+- [ ] **T-029** — Aplica DT-007: o passo do pipeline passa a devolver `Parecer | Despesa | None`; a calculadora passa a ter uma lista única de passos e `normalizar_categoria` (RN-002) entra nela como passo 2. `converter_para_brl` entra como passo 6
+  - **Atende:** `spec.md` §8, `plan.md` DT-007
+  - **Aceite:** `test_ordem_conversao_antes_da_nota_fiscal`, `test_pipeline_e_uma_lista_unica`
+  - **Commit:** `<preencher>`
+
+- [ ] **T-030** — RN-011 completa: converte o valor de origem pela taxa, arredonda uma única vez (RN-010 estendida, AMB-020), preenche `valor_origem`/`taxa_cambio`/`data_taxa` na `Despesa` resultante. Moeda sem cotação (AMB-019) recusa com valor `0.00` em BRL e origem preservada
+  - **Atende:** RN-010, RN-011, AMB-020, AMB-023
+  - **Aceite:** `test_rn_011_moeda_sem_cotacao_e_recusada`, `test_rn_011_arredonda_valor_convertido`, `test_rn_011_item_nao_convertivel_nao_polui_total`
+  - **Commit:** `<preencher>`
+
+- [ ] **T-031** — RN-004 passa a incluir `moeda` na chave de duplicata (AMB-022); RN-006 compara o piso ao valor já convertido em reais (AMB-021); o serializador emite `moeda`/`valor_origem`/`taxa_cambio`/`data_taxa` por item e o bloco `politica` no cabeçalho
+  - **Atende:** RN-004, RN-006, AMB-021, AMB-022, `spec.md` §4 (saída)
+  - **Aceite:** `test_rn_004_moedas_diferentes_nao_sao_duplicata`, `test_rn_006_piso_comparado_ao_valor_convertido`, `test_serializa_despesa_em_moeda_estrangeira`, `test_serializa_bloco_politica_no_cabecalho`
+  - **Commit:** `<preencher>`
+
+## Fase 7 — Reexecução dos aceites (T-032..T-034) — ponto de corte seguro
+
+> Com as Fases 5 e 6 verdes, a spec §9 (v1.2) passa a valer. Estas tasks
+> conferem os três totais registrados em D-002/D-003 e na memória de cálculo
+> de `docs/HANDOFF-dia2.md`, item a item, antes de qualquer trabalho opcional.
+
+- [ ] **T-032** — Atualiza `test_e2e_exemplo_oficial` para os valores da v1.2 (**R$ 341,93** sobre R$ 1.816,84), com comentário citando D-002
+  - **Atende:** `spec.md` §9
+  - **Aceite:** `test_e2e_exemplo_oficial` verde nos novos números, incluindo `d-001` (72,50, integral), `d-010` (0,00) e `d-014` (61,00, integral)
+  - **Commit:** `<preencher>`
+
+- [ ] **T-033** — Testes ponta a ponta novos sobre os dois arquivos de `exemplos/envelope/`
+  - **Atende:** `spec.md` §9
+  - **Aceite:** `test_e2e_envelope_cc_comercial` (R$ 1.343,26 sobre R$ 2.457,52), `test_e2e_envelope_cc_desconhecido` (R$ 433,76 sobre R$ 623,76)
+  - **Commit:** `<preencher>`
+
+- [ ] **T-034** — Casos de borda novos da spec §7 (v1.2) em `test_casos_de_borda.py`; os casos já existentes usam `centro_custo: "CC"` (ausente da tabela ⇒ padrão) e continuam válidos sem alteração de valor
+  - **Atende:** `spec.md` §7
+  - **Aceite:** `test_casos_de_borda` com as linhas novas (limite zero, CC desconhecido, categoria só existente num CC, moeda sem cotação, fronteira de R$ 500,00); contador de casos atualizado
+  - **Commit:** `<preencher>`
+
+## Fase 8 — Fila de aprovação manual (T-035..T-036) — opcional
+
+> Absorve o bloco C do envelope, registrado em D-004 (`DECISIONS.md`). Só
+> começar com a Fase 7 inteiramente verde. Se não fechar, D-004 e `spec.md`
+> §3 são reescritas declarando o item fora de escopo desta entrega — nunca
+> deixadas descrevendo um comportamento que o código não tem.
+
+- [ ] **T-035** — Enum `Estado` (`aprovacao_automatica` / `pendente_aprovacao`) em `motor/modelo.py`; campo `estado` em `Parecer`; `rn_013_fila_aprovacao(parecer, contexto)` como passo pós-decisão (não recusa, não altera valor)
+  - **Atende:** RN-013, AMB-024
+  - **Aceite:** `test_rn_013_acima_de_500_fica_pendente`, `test_rn_013_exatamente_500_nao_fica_pendente`, `test_rn_013_estorno_nunca_fica_pendente`
+  - **Commit:** `<preencher>`
+
+- [ ] **T-036** — Saída ganha `itens[].estado`, `resumo.quantidade_por_estado`, `resumo.total_pendente_aprovacao`
+  - **Atende:** RN-013, `spec.md` §4 (saída)
+  - **Aceite:** `test_resumo_conta_pendencias`; `test_e2e_envelope_cc_comercial` passa a conferir que `e-007` sai com estado `pendente_aprovacao`
+  - **Commit:** `<preencher>`
 
 ---
 
@@ -173,4 +260,21 @@ exatamente a matriz que a correção vai montar.
 | AMB-012 | T-006 | `test_rn_002_categoria_em_caixa_alta_e_normalizada` |
 | Ordem §8 | T-015 | `test_ordem_nota_fiscal_antes_do_teto` |
 | §7 bordas | T-016, T-017, T-018 | `test_casos_de_borda`, `test_fronteiras_inclusivas_e_exclusivas` |
-| §9 aceite | T-022 | `test_e2e_exemplo_oficial` |
+| §9 aceite (v1.1) | T-022 | `test_e2e_exemplo_oficial` |
+| RN-011 | T-028, T-030 | `test_rn_011_taxa_da_data_exata`, `test_rn_011_data_sem_cotacao_usa_ultima_anterior`, `test_rn_011_sem_cotacao_anterior_recusa`, `test_rn_011_moeda_sem_cotacao_e_recusada` |
+| RN-012 | T-023, T-025 | `test_rn_012_cc_sobrepoe_o_padrao`, `test_rn_012_cc_desconhecido_usa_padrao`, `test_rn_012_categoria_ausente_no_cc_herda_padrao`, `test_rn_012_limite_zero_recusa` |
+| RN-013 | T-035 | `test_rn_013_acima_de_500_fica_pendente`, `test_rn_013_exatamente_500_nao_fica_pendente`, `test_rn_013_estorno_nunca_fica_pendente` |
+| AMB-013 | T-023 | `test_rn_012_categoria_ausente_no_cc_herda_padrao` |
+| AMB-014 | T-025 | `test_rn_012_limite_zero_recusa` |
+| AMB-015 | T-025 | `test_rn_009_hospedagem_com_limite_zero_ainda_caracteriza_viagem` |
+| AMB-016 | T-034 | `test_casos_de_borda` (linha "periodicidade não agrega por dia") |
+| AMB-017 | T-024 | `test_carregador_politica_converte_percentual_em_fator` (vigência apenas copiada, não validada) |
+| AMB-018 | T-028 | `test_rn_011_data_sem_cotacao_usa_ultima_anterior` |
+| AMB-019 | T-030 | `test_rn_011_moeda_sem_cotacao_e_recusada` |
+| AMB-020 | T-030 | `test_rn_011_arredonda_valor_convertido` |
+| AMB-021 | T-031 | `test_rn_006_piso_comparado_ao_valor_convertido` |
+| AMB-022 | T-031 | `test_rn_004_moedas_diferentes_nao_sao_duplicata` |
+| AMB-023 | T-030 | `test_rn_011_item_nao_convertivel_nao_polui_total` |
+| AMB-024 | T-035 | `test_rn_013_exatamente_500_nao_fica_pendente` |
+| §7 bordas (v1.2) | T-034 | `test_casos_de_borda` (linhas novas) |
+| §9 aceite (v1.2) | T-032, T-033 | `test_e2e_exemplo_oficial`, `test_e2e_envelope_cc_comercial`, `test_e2e_envelope_cc_desconhecido` |
