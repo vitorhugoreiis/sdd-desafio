@@ -1,5 +1,10 @@
 # Plano — Absorção do Envelope do Dia 2 (Política v4)
 
+> **Este arquivo é plano de execução, não fonte da verdade.** As decisões de negócio que
+> aparecem aqui estão aqui porque ainda não foram escritas na `spec.md` — é exatamente o estado
+> que a regra 2 do `DESAFIO.md` chama de bug de spec. Fechada a Fase 1, a `spec.md` passa a ser
+> a única fonte, e este arquivo vira registro histórico de **como** a mudança foi absorvida.
+
 ## Contexto
 
 O Dia 1 fechou com a spec 1.1 e as tasks T-001..T-022 implementadas, 94 testes verdes
@@ -107,6 +112,15 @@ câmbio); o sistema continua sem consultar serviço em tempo de execução.
 - Documento de política: `padrao`, `centros_custo`, `nota_fiscal_obrigatoria_acima_de`,
   `acrescimo_em_viagem_percentual`, `versao`, `vigencia`.
 - Documento de câmbio: `taxas` por data e moeda.
+
+> **Onde está a linha do vazamento aqui.** Descrever os *campos* destes dois documentos é
+> legítimo — é contrato de entrada observável, exatamente como a §4 já faz com
+> `despesas[].tem_nota_fiscal`. O que **não** pode entrar na `spec.md`:
+> nome de arquivo (`politica-v4.json`), caminho (`exemplos/envelope/`), flag de linha de
+> comando (`--politica`, `--cambio`) ou formato (`JSON`). A spec diz *"o sistema recebe
+> uma tabela de limites por centro de custo, com os campos X, Y e Z"*; **onde** essa tabela
+> mora e **como** ela chega é `plan.md`. Teste rápido: se eu trocasse de linguagem amanhã,
+> isso mudaria? Se muda, é `plan.md` (`FAQ.md`).
 - Saída ganha por item `moeda`, `valor_origem`, `taxa_cambio`, `data_taxa`; e um bloco
   `politica` no cabeçalho (`versao`, `vigencia`, `centro_custo_aplicado`,
   `origem_dos_limites: "centro_custo" | "padrao"`) para o leitor auditar qual tabela valeu.
@@ -221,6 +235,19 @@ fim de cada fase.
 
 Cada task = 2 commits (`test(T-0XX)` → `feat(T-0XX)`).
 
+> **Instrumentação obrigatória durante estas fases.** Três números da `RUBRICA.md` não se
+> reconstroem depois — ou saem anotados no ato, ou estão perdidos:
+>
+> 1. **Reexecução vs. edição manual** (bônus de até +3 no critério 3). A cada task, anotar
+>    se o código saiu de reexecutar a task a partir da spec atualizada ou de edição à mão.
+> 2. **Erros do agente** (critério 4 zera −8 sem um caso concreto). Quando eu errar, anotar
+>    na hora: o que propus, por que estava errado, como você detectou.
+> 3. **`tasks.md` marcado ao longo do caminho** — `[x]` e hash **a cada task fechada**, não
+>    em lote no fim. A rubrica lista isso entre os sinais que a correção procura (critério 2).
+>
+> Rascunho em `docs/RELATORIO.md` mesmo, nas seções que já existem no template. É trabalho
+> que teria de ser feito de qualquer jeito; feito no ato, sai com evidência em vez de memória.
+
 ### Fase 5 — Política externa por centro de custo (T-023..T-026)
 
 | Task | O quê | Aceite |
@@ -259,22 +286,50 @@ manda ("se você deixar a spec inconsistente para chegar nele, perde").
 | **T-035** | Enum `Estado` (`aprovacao_automatica` / `pendente_aprovacao`), campo em `Parecer`, `rn_013_fila_aprovacao(parecer, contexto)` como passo pós-decisão | `test_rn_013_acima_de_500_fica_pendente`, `test_rn_013_exatamente_500_nao_fica_pendente`, `test_rn_013_estorno_nunca_fica_pendente` |
 | **T-036** | Saída: `itens[].estado`, `resumo.quantidade_por_estado`, `resumo.total_pendente_aprovacao` | `test_resumo_conta_pendencias`, `e-007` sai `pendente_aprovacao` no e2e |
 
-### Fase 9 — Fechamento (commits `docs:`)
+### Fase 9 — Fechamento e `RELATORIO.md` (commits `docs:`)
 
-- **`README.md`** — v4, novos flags, novos totais, tabela de "o que o sistema faz" refeita.
-- **`CLAUDE.md`** — a seção "Fora de escopo" hoje afirma "não trata outra moeda, não diferencia
-  política por cargo ou centro de custo". Vira mentira na v4 e precisa acompanhar a spec.
-- **`docs/RELATORIO.md`** — onde moram 20 pontos. Preencher os cinco blocos com evidência:
-  - *Delegação, Descrição, Discernimento* (pelo menos um erro concreto meu, com trecho de
-    sessão), *Diligência*.
-  - *O envelope*: arquivos tocados à mão, `git diff e025389 HEAD --stat`, tempo, o que a
-    arquitetura absorveu de graça (DT-002/DT-004: `Contexto` recebeu política e câmbio sem
-    mudar a assinatura das regras) e **o que resistiu** (DT-007 — a assinatura não comportava
-    um passo que transforma e recusa).
-  - Pendências herdadas do `HANDOFF.md`: o **desvio de granularidade de commits** da Fase 1-4
-    e por que não foi corrigido por reescrita; e o **formato das sessões** (`.jsonl` +
-    `docs/sessions/README.md`, alternativa ao `/export`).
-- **`docs/sessions/`** — rodar `python docs/sessions/_exportar.py` ao fim da sessão do Dia 2.
+**Primeiro, três arquivos precisam parar de contradizer a v4:**
+
+- **`README.md`** — v4, flags novos, totais novos, tabela de "o que o sistema faz" refeita.
+- **`CLAUDE.md`** — "Fora de escopo" ainda diz *"não trata outra moeda, não diferencia política
+  por cargo ou centro de custo"*. Na v4 isso é falso, e `CLAUDE.md` errado é pior que ausente:
+  um agente lendo aquilo implementa contra a spec. Aproveitar para **declarar os escopos de
+  commit realmente usados** — hoje o arquivo lista só `docs(spec)`, `docs(plan)`, `docs(tasks)`,
+  e o histórico já usa `docs:` e `docs(sessions):`, e vai usar `docs(envelope):`. Declarar
+  transforma deriva em convenção.
+- **`docs/sessions/`** — reexportar.
+
+**Depois, `docs/RELATORIO.md` — 20 pontos.** O `template/docs/RELATORIO.md` tem **seis** blocos.
+A rubrica fala em "os cinco blocos (4 Ds + envelope)" e não conta o *Fechamento* — mas é lá que
+está a *"autocrítica verificável — algo que a pessoa faria diferente, com o motivo"* que a faixa
+18–20 exige. **Preencher os seis**, respondendo cada pergunta que o template faz, não um resumo:
+
+| Bloco | O que o template pergunta | Onde está a evidência |
+|---|---|---|
+| **Delegação** | tabela de 7 atividades (quem fez cada uma) · onde deleguei e me arrependi · onde **não** deleguei e deveria · usei subagentes/skills/MCP/hooks? | Resposta honesta em subagentes: **não foram usados**, e o porquê. O `DESAFIO.md` diz que vale ponto se usou — não usar não penaliza, omitir a pergunta sim |
+| **Descrição** | um requisito ambíguo: V1 na spec × versão final · o que estava ambíguo · como percebi · hash | `git log -p specs/001-motor-reembolso/spec.md`. Candidato forte: **AMB-006 / RN-009 ("em viagem")** — a política não tem o campo e a regra virou inferência por hospedagem. Se a V1 já estava boa, o `DESAFIO.md` aceita: *"prove com o histórico do arquivo"* |
+| **Discernimento** | Caso 1: o que propôs · por que errado · **como detectei** · o que fiz · **link para `docs/sessions/`** | Candidatos já ocorridos — ver abaixo |
+| **Diligência** | procedimento real · **% do diff que li** · o que aceitei sem verificar e me custou · quem escreveu os testes e como sei que testam a coisa certa | O template avisa: *"teste escrito pelo mesmo agente que escreveu o código passa com muita facilidade"*. Vale citar o caso do Dia 1: `d-010` tem teste unitário e teste de borda que parecem contraditórios e testam camadas diferentes (`docs/HANDOFF.md`) |
+| **O envelope** | n de arquivos à mão · tempo · diff stat · absorveu de graça · resistiu · **ordem em que fiz** · se soubesse antes · o que a spec poupou | `git diff e025389 HEAD --stat` · absorveu de graça: DT-002/DT-004 (o `Contexto` recebeu política e câmbio sem mudar a assinatura das regras) · **resistiu: DT-007** · a contagem reexecução × manual da instrumentação acima é o bônus de +3 |
+| **Fechamento** | pra que tamanho de projeto valeu · pra qual não · o que faria diferente · **a coisa mais desconfortável que aprendi sobre como trabalho com IA** | É o bloco que a rubrica não lista e que carrega a exigência de autocrítica da faixa mais alta |
+
+Mais as duas pendências herdadas do `docs/HANDOFF.md`: o **desvio de granularidade de commits**
+da Fase 1-4 e por que não foi corrigido por reescrita (`FAQ.md`: *"não reescreva para maquiar"*);
+e o **formato das sessões** (`.jsonl` + `docs/sessions/README.md`, alternativa ao `/export`).
+
+#### Candidatos a caso de Discernimento — já ocorridos na sessão 04
+
+1. **Fase de rubrica inventada.** Propus uma "Fase 9 — passagem pela `RUBRICA.md`" como etapa do
+   plano. Você perguntou se o avaliador pedia aquilo; a conferência mostrou que `template/` tem
+   seis arquivos e nenhum é de rubrica, e que o `DESAFIO.md` só manda lê-la antes de começar. Era
+   *solução desnecessariamente complexa* — uma das categorias que o `DESAFIO.md` lista.
+2. **Afirmação exagerada sobre vazamento.** Afirmei que descrever os campos dos documentos de
+   política e câmbio na spec era vazamento de solução. Errado: a §4 já documenta
+   `despesas[].tem_nota_fiscal`. Campo de contrato de entrada é spec; o vazamento real é nome de
+   arquivo, caminho, flag e formato.
+3. **Mensagem de commit corrompida.** Usei here-string de PowerShell (`@'…'@`) na ferramenta
+   Bash, que é Git Bash. O `@` virou a primeira linha do commit. Detectado ao conferir
+   `git log -1 --format='%B'`, corrigido com `--amend`.
 
 ---
 
@@ -325,6 +380,25 @@ regra que precise de estado por execução.
 6. **Rastreabilidade:** `git log --grep "T-02"` mostra os pares `test`/`feat`; a matriz de
    cobertura no fim do `tasks.md` fecha RN-011/012/013.
 7. **Métrica para o relatório:** `git diff e025389 HEAD --stat`.
+
+## Aberturas de erro — o que a correção pegaria hoje
+
+Levantado cruzando a `RUBRICA.md` com o estado real do repositório. **Não vira fase nem
+artefato** — a rubrica é o instrumento de quem corrige, não entregável (`template/` tem seis
+arquivos e nenhum é de rubrica; o `DESAFIO.md` só manda lê-la antes de começar). Cada defesa
+entra na fase onde já pertence.
+
+| # | Abertura | Custo | Defesa | Fase |
+|---|---|---|---|---|
+| 1 | **As 4 decisões de ambiguidade vivem só neste plano** — não estão na `spec.md`. É literalmente a penalidade "regra de negócio que só existe no chat" | −5 cada, teto −15 | Fase 1 leva todas para a §6 como AMB-013..024. E o cabeçalho deste arquivo declara que ele **não é fonte da verdade** | 1 |
+| 2 | **`CLAUDE.md` contradiz a v4** — afirma que não trata outra moeda nem política por centro de custo | agente implementando contra a spec | Atualizar junto com a spec, não no fim | 9 |
+| 3 | **Escopos de commit não declarados** — o histórico usa `docs:` e `docs(sessions):`; o `CLAUDE.md` só declara três | ruído no critério 2 | Declarar os escopos no `CLAUDE.md`. **Não reescrever histórico** (`FAQ.md`) | 9 |
+| 4 | **Vazamento de solução na spec** ao documentar os dois documentos novos | faixa 17–22 em vez de 23–25 | Nota da Fase 1: campo sim, arquivo/caminho/flag/formato não | 1 |
+| 5 | **A quebra de 703,43 → 341,93 parecendo bug** em vez de consequência | critério 3 despenca | D-002 explícito **antes** do código, e comentário citando D-002 dentro do teste alterado | 2, 7 |
+| 6 | **Granularidade `test`/`feat` da Fase 1-4** — herdada, um commit só por task | já ocorrido | Registrar no relatório, seguir a convenção de T-023 em diante. Já decidido no `docs/HANDOFF.md` | 9 |
+| 7 | **Commitar `00-ENVELOPE-LACRADO.md`** — o envelope manda commitar "os quatro" arquivos de dados; o comunicado é um quinto | baixo | Manter, com o motivo dito: não é gabarito (ele mesmo diz que **não** lista as ambiguidades) e é a fonte citada por D-002/003/004. O `.gitignore` barra `instrutor/`, que é outra coisa — gabarito e avaliador | 0 |
+| 8 | **Fase 8 pela metade**, deixando a spec descrevendo o que o código não faz | 0–5 no critério 3 | Não iniciar sem a Fase 7 verde; se cortar, reescrever D-004 e a §3 declarando fora de escopo | 8 |
+| 9 | **`RELATORIO.md` subespecificado neste plano** — recebia 10 linhas para 20 pontos e omitia o bloco *Fechamento*, que carrega a autocrítica exigida pela faixa 18–20 | faixa 13–17 em vez de 18–20 | Fase 9 reescrita com os seis blocos do template e a origem da evidência de cada um | 9 |
 
 ## Riscos conhecidos
 
