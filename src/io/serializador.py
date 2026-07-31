@@ -34,6 +34,7 @@ def _item(parecer: Parecer) -> dict:
         "valor_reembolsavel": _valor(parecer.valor_reembolsavel),
         "valor_glosado": _valor(parecer.valor_glosado),
         "status": parecer.status.value,
+        "estado": parecer.estado.value,
         "regras_aplicadas": list(parecer.regras_aplicadas),
         "justificativa": parecer.justificativa,
     }
@@ -63,6 +64,11 @@ def para_documento(resultado: Resultado) -> dict:
                 status.value: quantidade
                 for status, quantidade in resultado.quantidade_por_status.items()
             },
+            "quantidade_por_estado": {
+                estado.value: quantidade
+                for estado, quantidade in resultado.quantidade_por_estado.items()
+            },
+            "total_pendente_aprovacao": _valor(resultado.total_pendente_aprovacao),
         },
         "itens": [_item(parecer) for parecer in resultado.pareceres],
     }

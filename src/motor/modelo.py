@@ -105,3 +105,17 @@ class Resultado:
         for parecer in self.pareceres:
             contagem[parecer.status] += 1
         return contagem
+
+    @property
+    def quantidade_por_estado(self) -> dict[Estado, int]:
+        contagem = {estado: 0 for estado in Estado}
+        for parecer in self.pareceres:
+            contagem[parecer.estado] += 1
+        return contagem
+
+    @property
+    def total_pendente_aprovacao(self) -> Decimal:
+        return sum(
+            (p.valor_reembolsavel for p in self.pareceres if p.estado == Estado.PENDENTE_APROVACAO),
+            Decimal("0.00"),
+        )
