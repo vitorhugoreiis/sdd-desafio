@@ -184,9 +184,10 @@ a ordem de aplicação da spec §8.
   - **Aceite:** `test_rn_011_moeda_sem_cotacao_e_recusada`, `test_rn_011_arredonda_valor_convertido`, `test_rn_011_item_nao_convertivel_nao_polui_total`
   - **Commit:** `ac6d911` (test) — **sem commit `feat` separado.** `rn_011_conversao_cambial` já saiu completa em T-029 (`5a45017`), porque `test_ordem_conversao_antes_da_nota_fiscal` só é um teste de ordem significativo se a conversão já converte de verdade. T-030 mediu essa cobertura com testes novos e nenhum passou a exigir código adicional — a arquitetura (DT-007) absorveu esta task de graça
 
-- [ ] **T-031** — RN-004 passa a incluir `moeda` na chave de duplicata (AMB-022); RN-006 compara o piso ao valor já convertido em reais (AMB-021); o serializador emite `moeda`/`valor_origem`/`taxa_cambio`/`data_taxa` por item e o bloco `politica` no cabeçalho
+- [x] **T-031** — RN-004 passa a incluir `moeda` na chave de duplicata (AMB-022); RN-006 compara o piso ao valor já convertido em reais (AMB-021); o serializador emite `moeda`/`valor_origem`/`taxa_cambio`/`data_taxa` por item e o bloco `politica` no cabeçalho
   - **Atende:** RN-004, RN-006, AMB-021, AMB-022, `spec.md` §4 (saída)
   - **Aceite:** `test_rn_004_moedas_diferentes_nao_sao_duplicata`, `test_rn_006_piso_comparado_ao_valor_convertido`, `test_serializa_despesa_em_moeda_estrangeira`, `test_serializa_bloco_politica_no_cabecalho`
+  - **Commit:** `d5c7b77` (test) / `5e22a14` (feat) — `test_rn_006_piso_comparado_ao_valor_convertido` já passava antes do `feat`: a ordem do pipeline (RN-011 no passo 6, antes de RN-006 no passo 8) já garantia isso de graça (DT-007)
   - **Commit:** `<preencher>`
 
 ## Fase 7 — Reexecução dos aceites (T-032..T-034) — ponto de corte seguro
