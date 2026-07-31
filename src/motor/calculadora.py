@@ -57,4 +57,4 @@ def calcular(solicitacao: Solicitacao, politica: Politica, tabela_cambio: Tabela
             pareceres.append(resultado)
             break
 
-    return Resultado(solicitacao=solicitacao, pareceres=tuple(pareceres))
+    return Resultado(solicitacao=solicitacao, politica=politica, pareceres=tuple(pareceres))

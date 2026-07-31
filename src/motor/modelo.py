@@ -68,7 +68,15 @@ class Parecer:
 @dataclass(frozen=True)
 class Resultado:
     solicitacao: Solicitacao
+    politica: Politica
     pareceres: tuple[Parecer, ...]
+
+    @property
+    def origem_dos_limites(self) -> str:
+        """RN-012 — "centro_custo" quando a tabela do centro de custo do
+        colaborador foi usada, "padrao" quando ele estava ausente dela."""
+        centro_custo = self.solicitacao.colaborador["centro_custo"]
+        return "centro_custo" if centro_custo in self.politica.centros_custo else "padrao"
 
     @property
     def total_lancado(self) -> Decimal:

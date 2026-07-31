@@ -12,12 +12,25 @@ def _valor(valor) -> str:
     return f"{valor:.2f}"
 
 
+def _valor_opcional(valor) -> str | None:
+    return _valor(valor) if valor is not None else None
+
+
+def _data_opcional(data) -> str | None:
+    return data.isoformat() if data is not None else None
+
+
 def _item(parecer: Parecer) -> dict:
+    despesa = parecer.despesa
     return {
-        "id": parecer.despesa.id,
-        "data": parecer.despesa.data.isoformat(),
-        "categoria": parecer.despesa.categoria,
-        "valor_lancado": _valor(parecer.despesa.valor),
+        "id": despesa.id,
+        "data": despesa.data.isoformat(),
+        "categoria": despesa.categoria,
+        "moeda": despesa.moeda,
+        "valor_origem": _valor(despesa.valor_origem),
+        "taxa_cambio": _valor_opcional(despesa.taxa_cambio),
+        "data_taxa": _data_opcional(despesa.data_taxa),
+        "valor_lancado": _valor(despesa.valor),
         "valor_reembolsavel": _valor(parecer.valor_reembolsavel),
         "valor_glosado": _valor(parecer.valor_glosado),
         "status": parecer.status.value,
@@ -28,12 +41,19 @@ def _item(parecer: Parecer) -> dict:
 
 def para_documento(resultado: Resultado) -> dict:
     solicitacao = resultado.solicitacao
+    politica = resultado.politica
     return {
         "colaborador": solicitacao.colaborador,
         "periodo": {
             "competencia": solicitacao.competencia,
             "inicio": solicitacao.inicio.isoformat(),
             "fim": solicitacao.fim.isoformat(),
+        },
+        "politica": {
+            "versao": politica.versao,
+            "vigencia": _data_opcional(politica.vigencia),
+            "centro_custo_aplicado": solicitacao.colaborador["centro_custo"],
+            "origem_dos_limites": resultado.origem_dos_limites,
         },
         "resumo": {
             "total_lancado": _valor(resultado.total_lancado),

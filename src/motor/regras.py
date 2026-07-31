@@ -62,9 +62,10 @@ def rn_001_categoria_coberta(despesa: Despesa, contexto: Contexto) -> Parecer | 
 
 def criar_rn_004_duplicata() -> Callable[[Despesa, Contexto], Parecer | None]:
     """RN-004 — fábrica com estado próprio: a primeira ocorrência da chave
-    (data, categoria, fornecedor, descrição, valor) passa; as demais são
-    recusadas (AMB-008). Uma instância nova por cálculo, para não vazar
-    estado entre execuções (spec.md §3)."""
+    (data, categoria, fornecedor, descrição, valor de origem e moeda) passa;
+    as demais são recusadas (AMB-008, AMB-022 — moedas diferentes não são
+    duplicata mesmo com o mesmo número). Uma instância nova por cálculo,
+    para não vazar estado entre execuções (spec.md §3)."""
     vistos: set[tuple] = set()
 
     def regra(despesa: Despesa, contexto: Contexto) -> Parecer | None:
@@ -73,7 +74,8 @@ def criar_rn_004_duplicata() -> Callable[[Despesa, Contexto], Parecer | None]:
             despesa.categoria,
             despesa.fornecedor,
             despesa.descricao,
-            despesa.valor,
+            despesa.valor_origem,
+            despesa.moeda,
         )
         if chave in vistos:
             return Parecer(
