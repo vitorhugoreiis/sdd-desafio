@@ -27,6 +27,15 @@ def _arredondar(valor: Decimal) -> Decimal:
     return valor.quantize(DUAS_CASAS, rounding=ROUND_HALF_UP)
 
 
+def _moeda(dados: dict, rotulo: str) -> str:
+    valor = dados.get("moeda")
+    if valor is None:
+        return "BRL"
+    if not isinstance(valor, str):
+        raise ErroDeEntrada(f"Campo invalido: {rotulo}")
+    return valor.strip().upper()
+
+
 def _para_despesa(dados: dict, indice: int) -> Despesa:
     rotulo_base = f"despesas[{indice}]"
     for campo in CAMPOS_DESPESA:
@@ -35,12 +44,18 @@ def _para_despesa(dados: dict, indice: int) -> Despesa:
     data = _exigir_data(dados, "data", f"{rotulo_base}.data")
 
     try:
-        valor = _arredondar(Decimal(dados["valor"]))
+        valor_bruto = Decimal(dados["valor"])
     except (InvalidOperation, TypeError, ValueError):
         raise ErroDeEntrada(f"Campo invalido: {rotulo_base}.valor") from None
 
     if not isinstance(dados["tem_nota_fiscal"], bool):
         raise ErroDeEntrada(f"Campo invalido: {rotulo_base}.tem_nota_fiscal")
+
+    moeda = _moeda(dados, f"{rotulo_base}.moeda")
+
+    # RN-010/AMB-020: BRL arredonda na leitura, como sempre. Moeda estrangeira
+    # so arredonda uma vez, apos a conversao (RN-011) — aqui fica intacta.
+    valor = _arredondar(valor_bruto) if moeda == "BRL" else valor_bruto
 
     return Despesa(
         id=dados["id"],
@@ -50,6 +65,8 @@ def _para_despesa(dados: dict, indice: int) -> Despesa:
         fornecedor=dados["fornecedor"],
         valor=valor,
         tem_nota_fiscal=dados["tem_nota_fiscal"],
+        moeda=moeda,
+        valor_origem=valor_bruto,
     )
 
 

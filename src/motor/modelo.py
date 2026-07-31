@@ -23,6 +23,14 @@ class Despesa:
     fornecedor: str
     valor: Decimal
     tem_nota_fiscal: bool
+    moeda: str = "BRL"
+    valor_origem: Decimal | None = None
+    taxa_cambio: Decimal | None = None
+    data_taxa: date | None = None
+
+    def __post_init__(self):
+        if self.valor_origem is None:
+            object.__setattr__(self, "valor_origem", self.valor)
 
 
 @dataclass(frozen=True)
