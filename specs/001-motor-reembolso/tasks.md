@@ -188,7 +188,6 @@ a ordem de aplicação da spec §8.
   - **Atende:** RN-004, RN-006, AMB-021, AMB-022, `spec.md` §4 (saída)
   - **Aceite:** `test_rn_004_moedas_diferentes_nao_sao_duplicata`, `test_rn_006_piso_comparado_ao_valor_convertido`, `test_serializa_despesa_em_moeda_estrangeira`, `test_serializa_bloco_politica_no_cabecalho`
   - **Commit:** `d5c7b77` (test) / `5e22a14` (feat) — `test_rn_006_piso_comparado_ao_valor_convertido` já passava antes do `feat`: a ordem do pipeline (RN-011 no passo 6, antes de RN-006 no passo 8) já garantia isso de graça (DT-007)
-  - **Commit:** `<preencher>`
 
 ## Fase 7 — Reexecução dos aceites (T-032..T-034) — ponto de corte seguro
 
