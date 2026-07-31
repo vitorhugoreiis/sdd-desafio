@@ -2,14 +2,11 @@
 from datetime import date
 from decimal import Decimal
 
-from src.motor.modelo import Contexto, Status
+from src.motor.modelo import Status
 from src.motor.regras import rn_003_competencia
 
+from tests.fabricas import contexto as _contexto
 from tests.fabricas import despesa
-
-
-def _contexto():
-    return Contexto(competencia="2026-07", datas_em_viagem=frozenset())
 
 
 def test_rn_003_despesa_fora_da_competencia_e_recusada():

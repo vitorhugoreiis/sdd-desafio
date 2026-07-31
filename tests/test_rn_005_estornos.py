@@ -1,12 +1,12 @@
 """T-010 — RN-005: estornos abatem o valor integral, sem teto e sem nota (AMB-010)."""
 from decimal import Decimal
 
-from src.motor.modelo import Contexto, Status
+from src.motor.modelo import Status
 from src.motor.regras import rn_005_estorno
 
-from tests.fabricas import despesa
+from tests.fabricas import contexto, despesa
 
-CONTEXTO = Contexto(competencia="2026-07", datas_em_viagem=frozenset())
+CONTEXTO = contexto()
 
 
 def test_rn_005_estorno_abate_valor_integral():

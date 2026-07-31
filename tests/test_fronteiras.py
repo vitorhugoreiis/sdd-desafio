@@ -6,12 +6,12 @@ errada.
 """
 from decimal import Decimal
 
-from src.motor.modelo import Contexto, Status
+from src.motor.modelo import Status
 from src.motor.regras import rn_006_nota_fiscal, rn_007_teto_categoria
 
-from tests.fabricas import despesa
+from tests.fabricas import contexto, despesa
 
-CONTEXTO = Contexto(competencia="2026-07", datas_em_viagem=frozenset())
+CONTEXTO = contexto()
 
 
 def test_fronteiras_inclusivas_e_exclusivas():

@@ -2,12 +2,12 @@
 from datetime import date
 from decimal import Decimal
 
-from src.motor.modelo import Contexto, Status
+from src.motor.modelo import Status
 from src.motor.regras import rn_007_teto_categoria
 
-from tests.fabricas import despesa
+from tests.fabricas import contexto, despesa
 
-CONTEXTO = Contexto(competencia="2026-07", datas_em_viagem=frozenset())
+CONTEXTO = contexto()
 
 
 def test_rn_007_teto_e_por_despesa_nao_por_dia():

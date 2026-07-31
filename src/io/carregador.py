@@ -5,9 +5,9 @@ nomeia o campo ausente ou de tipo invalido e nenhuma Solicitacao parcial e
 devolvida.
 """
 import json
-from datetime import date
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 
+from src.io.erros import ErroDeEntrada, exigir as _exigir, exigir_data as _exigir_data
 from src.motor.modelo import Despesa, Solicitacao
 
 DUAS_CASAS = Decimal("0.01")
@@ -15,10 +15,6 @@ DUAS_CASAS = Decimal("0.01")
 CAMPOS_COLABORADOR = ("id", "nome", "centro_custo")
 CAMPOS_PERIODO = ("competencia", "inicio", "fim")
 CAMPOS_DESPESA = ("id", "data", "categoria", "descricao", "fornecedor", "valor", "tem_nota_fiscal")
-
-
-class ErroDeEntrada(Exception):
-    """Campo obrigatorio ausente ou de tipo invalido na entrada."""
 
 
 def carregar(caminho: str) -> Solicitacao:
@@ -31,18 +27,13 @@ def _arredondar(valor: Decimal) -> Decimal:
     return valor.quantize(DUAS_CASAS, rounding=ROUND_HALF_UP)
 
 
-def _exigir(dados: dict, chave: str, rotulo: str):
-    if not isinstance(dados, dict) or chave not in dados:
-        raise ErroDeEntrada(f"Campo obrigatorio ausente: {rotulo}")
-    return dados[chave]
-
-
-def _exigir_data(dados: dict, chave: str, rotulo: str) -> date:
-    valor = _exigir(dados, chave, rotulo)
-    try:
-        return date.fromisoformat(valor)
-    except (TypeError, ValueError):
-        raise ErroDeEntrada(f"Campo invalido: {rotulo}") from None
+def _moeda(dados: dict, rotulo: str) -> str:
+    valor = dados.get("moeda")
+    if valor is None:
+        return "BRL"
+    if not isinstance(valor, str):
+        raise ErroDeEntrada(f"Campo invalido: {rotulo}")
+    return valor.strip().upper()
 
 
 def _para_despesa(dados: dict, indice: int) -> Despesa:
@@ -53,12 +44,18 @@ def _para_despesa(dados: dict, indice: int) -> Despesa:
     data = _exigir_data(dados, "data", f"{rotulo_base}.data")
 
     try:
-        valor = _arredondar(Decimal(dados["valor"]))
+        valor_bruto = Decimal(dados["valor"])
     except (InvalidOperation, TypeError, ValueError):
         raise ErroDeEntrada(f"Campo invalido: {rotulo_base}.valor") from None
 
     if not isinstance(dados["tem_nota_fiscal"], bool):
         raise ErroDeEntrada(f"Campo invalido: {rotulo_base}.tem_nota_fiscal")
+
+    moeda = _moeda(dados, f"{rotulo_base}.moeda")
+
+    # RN-010/AMB-020: BRL arredonda na leitura, como sempre. Moeda estrangeira
+    # so arredonda uma vez, apos a conversao (RN-011) — aqui fica intacta.
+    valor = _arredondar(valor_bruto) if moeda == "BRL" else valor_bruto
 
     return Despesa(
         id=dados["id"],
@@ -68,6 +65,8 @@ def _para_despesa(dados: dict, indice: int) -> Despesa:
         fornecedor=dados["fornecedor"],
         valor=valor,
         tem_nota_fiscal=dados["tem_nota_fiscal"],
+        moeda=moeda,
+        valor_origem=valor_bruto,
     )
 
 

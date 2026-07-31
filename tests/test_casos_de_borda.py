@@ -11,11 +11,14 @@ import pytest
 
 from src.io.carregador import carregar
 from src.motor.calculadora import calcular
-from src.motor.modelo import Status
+from src.motor.modelo import Estado, Status
+from src.motor.politica import LimiteCategoria
+
+from tests.fabricas import politica_padrao, tabela_cambio
 
 
-def _d(id, data, categoria, valor, nota, descricao="Despesa de teste", fornecedor="Fornecedor Teste"):
-    return {
+def _d(id, data, categoria, valor, nota, descricao="Despesa de teste", fornecedor="Fornecedor Teste", moeda=None):
+    dados = {
         "id": id,
         "data": data,
         "categoria": categoria,
@@ -24,11 +27,14 @@ def _d(id, data, categoria, valor, nota, descricao="Despesa de teste", fornecedo
         "valor": valor,
         "tem_nota_fiscal": nota,
     }
+    if moeda is not None:
+        dados["moeda"] = moeda
+    return dados
 
 
-def _entrada(despesas, competencia="2026-07"):
+def _entrada(despesas, competencia="2026-07", centro_custo="CC"):
     return {
-        "colaborador": {"id": "c-1", "nome": "Teste", "centro_custo": "CC"},
+        "colaborador": {"id": "c-1", "nome": "Teste", "centro_custo": centro_custo},
         "periodo": {"competencia": competencia, "inicio": "2026-07-01", "fim": "2026-07-31"},
         "despesas": despesas,
     }
@@ -163,18 +169,82 @@ CASOS = [
         and r.total_reembolsavel == Decimal("0.00")
         and r.total_glosado == Decimal("0.00"),
     ),
+    # --- linhas novas da spec.md §7 (v1.2, T-034) ---
+    (
+        "RN-012-limite-zero-recusa",
+        [_d("d-1", "2026-07-14", "hospedagem", 480.00, True)],
+        lambda r: r.pareceres[0].status == Status.RECUSADA
+        and r.pareceres[0].valor_reembolsavel == Decimal("0.00")
+        and "RN-012" in r.pareceres[0].regras_aplicadas,
+        dict(
+            centro_custo="CC-ENG-PLATAFORMA",
+            politica=politica_padrao(centros_custo={"CC-ENG-PLATAFORMA": {"hospedagem": LimiteCategoria(Decimal("0.00"))}}),
+        ),
+    ),
+    (
+        "RN-012-cc-desconhecido-usa-padrao",
+        [_d("d-1", "2026-07-03", "alimentacao", 55.00, True)],
+        lambda r: r.pareceres[0].status == Status.APROVADA and r.pareceres[0].valor_reembolsavel == Decimal("55.00"),
+        dict(
+            centro_custo="CC-NUNCA-VISTO",
+            politica=politica_padrao(centros_custo={"CC-ENG-PLATAFORMA": {"alimentacao": LimiteCategoria(Decimal("75.00"))}}),
+        ),
+    ),
+    (
+        "RN-001-categoria-so-existe-num-cc",
+        [_d("d-1", "2026-07-17", "representacao", 190.00, True)],
+        lambda r: r.pareceres[0].status == Status.RECUSADA and r.pareceres[0].valor_reembolsavel == Decimal("0.00"),
+        dict(
+            centro_custo="CC-SUPORTE-N2",
+            politica=politica_padrao(centros_custo={"CC-COMERCIAL": {"representacao": LimiteCategoria(Decimal("300.00"))}}),
+        ),
+    ),
+    (
+        "RN-011-moeda-sem-cotacao-recusa",
+        [_d("d-1", "2026-07-21", "representacao", 55.00, True, moeda="GBP")],
+        lambda r: r.pareceres[0].status == Status.RECUSADA
+        and r.pareceres[0].valor_reembolsavel == Decimal("0.00")
+        and "RN-011" in r.pareceres[0].regras_aplicadas
+        and r.pareceres[0].despesa.valor_origem == Decimal("55.00"),
+        dict(
+            centro_custo="CC-COMERCIAL",
+            politica=politica_padrao(centros_custo={"CC-COMERCIAL": {"representacao": LimiteCategoria(Decimal("300.00"))}}),
+            cambio=tabela_cambio(taxas={}),  # GBP nunca aparece
+        ),
+    ),
+    # --- fronteira de RN-013 (opcional, T-035) ---
+    (
+        "RN-013-exatamente-500-nao-fica-pendente",
+        [_d("d-1", "2026-07-03", "alimentacao", 500.00, True)],
+        lambda r: r.pareceres[0].estado == Estado.APROVACAO_AUTOMATICA
+        and r.pareceres[0].valor_reembolsavel == Decimal("500.00"),
+        dict(politica=politica_padrao(padrao={"alimentacao": LimiteCategoria(Decimal("1000.00"))})),
+    ),
+    (
+        "RN-013-um-centavo-acima-de-500-fica-pendente",
+        [_d("d-1", "2026-07-03", "alimentacao", 500.01, True)],
+        lambda r: r.pareceres[0].estado == Estado.PENDENTE_APROVACAO
+        and r.pareceres[0].valor_reembolsavel == Decimal("500.01"),
+        dict(politica=politica_padrao(padrao={"alimentacao": LimiteCategoria(Decimal("1000.00"))})),
+    ),
 ]
 
 
-@pytest.mark.parametrize("despesas, verificar", [(c[1], c[2]) for c in CASOS], ids=[c[0] for c in CASOS])
-def test_casos_de_borda(tmp_path, despesas, verificar):
-    caminho = tmp_path / "entrada.json"
-    caminho.write_text(json.dumps(_entrada(despesas)), encoding="utf-8")
+@pytest.mark.parametrize("caso", CASOS, ids=[c[0] for c in CASOS])
+def test_casos_de_borda(tmp_path, caso):
+    _, despesas, verificar, *resto = caso
+    extras = resto[0] if resto else {}
+    centro_custo = extras.get("centro_custo", "CC")
+    politica = extras.get("politica") or politica_padrao()
+    cambio = extras.get("cambio") or tabela_cambio()
 
-    resultado = calcular(carregar(str(caminho)))
+    caminho = tmp_path / "entrada.json"
+    caminho.write_text(json.dumps(_entrada(despesas, centro_custo=centro_custo)), encoding="utf-8")
+
+    resultado = calcular(carregar(str(caminho)), politica, cambio)
 
     assert verificar(resultado)
 
 
-def test_casos_de_borda_cobre_as_18_linhas_da_spec():
-    assert len(CASOS) == 18
+def test_casos_de_borda_cobre_as_24_linhas_da_spec():
+    assert len(CASOS) == 24

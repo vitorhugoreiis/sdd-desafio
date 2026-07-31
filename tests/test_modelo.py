@@ -7,6 +7,8 @@ import pytest
 
 from src.motor.modelo import Despesa, Parecer, Resultado, Solicitacao, Status
 
+from tests.fabricas import politica_padrao
+
 
 def _despesa(**overrides):
     base = dict(
@@ -38,12 +40,26 @@ def test_modelo_e_imutavel():
         despesa.valor = Decimal("1.00")  # type: ignore[misc]
 
 
+def test_despesa_moeda_padrao_e_brl():
+    despesa = _despesa()
+    assert despesa.moeda == "BRL"
+    assert despesa.taxa_cambio is None
+    assert despesa.data_taxa is None
+
+
+def test_despesa_valor_origem_padrao_e_o_proprio_valor():
+    # T-027: quem nao informa valor_origem explicitamente (a maioria dos
+    # testes de regra, e toda despesa em BRL) o recebe igual a `valor`.
+    despesa = _despesa(valor=Decimal("72.50"))
+    assert despesa.valor_origem == Decimal("72.50")
+
+
 def test_modelo_e_imutavel_para_solicitacao_e_resultado():
     solicitacao = _solicitacao([_despesa()])
     with pytest.raises(FrozenInstanceError):
         solicitacao.competencia = "2026-08"  # type: ignore[misc]
 
-    resultado = Resultado(solicitacao=solicitacao, pareceres=())
+    resultado = Resultado(solicitacao=solicitacao, politica=politica_padrao(), pareceres=())
     with pytest.raises(FrozenInstanceError):
         resultado.pareceres = ()  # type: ignore[misc]
 
@@ -71,6 +87,7 @@ def test_total_reembolsavel_e_propriedade_calculada_nao_campo():
     )
     resultado = Resultado(
         solicitacao=_solicitacao([despesa_aprovada, despesa_parcial]),
+        politica=politica_padrao(),
         pareceres=(parecer_aprovado, parecer_parcial),
     )
 

@@ -2,12 +2,12 @@
 from datetime import date
 from decimal import Decimal
 
-from src.motor.modelo import Contexto, Status
+from src.motor.modelo import Status
 from src.motor.regras import criar_rn_004_duplicata
 
-from tests.fabricas import despesa
+from tests.fabricas import contexto, despesa
 
-CONTEXTO = Contexto(competencia="2026-07", datas_em_viagem=frozenset())
+CONTEXTO = contexto()
 
 
 def test_rn_004_duplicata_exata_recusa_a_segunda():
@@ -55,3 +55,18 @@ def test_rn_004_cada_calculo_comeca_com_estado_novo():
 
     segunda_execucao = criar_rn_004_duplicata()
     assert segunda_execucao(d, CONTEXTO) is None
+
+
+def test_rn_004_moedas_diferentes_nao_sao_duplicata():
+    """AMB-022 — mesmo valor numerico, data, categoria, fornecedor e
+    descricao, mas moedas diferentes: nao e duplicata."""
+    regra = criar_rn_004_duplicata()
+    em_reais = despesa(
+        id="d-1", data=date(2026, 7, 9), fornecedor="Loja", descricao="Almoco", valor=Decimal("100.00"), moeda="BRL"
+    )
+    em_dolares = despesa(
+        id="d-2", data=date(2026, 7, 9), fornecedor="Loja", descricao="Almoco", valor=Decimal("100.00"), moeda="USD"
+    )
+
+    assert regra(em_reais, CONTEXTO) is None
+    assert regra(em_dolares, CONTEXTO) is None
