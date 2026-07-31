@@ -15,6 +15,14 @@ class Status(Enum):
     ESTORNO = "estorno"
 
 
+class Estado(Enum):
+    """RN-013 (opcional, v4) — ortogonal a `Status`: informa se o item
+    segue o fluxo normal ou aguarda aprovação manual do gestor."""
+
+    APROVACAO_AUTOMATICA = "aprovacao_automatica"
+    PENDENTE_APROVACAO = "pendente_aprovacao"
+
+
 @dataclass(frozen=True)
 class Despesa:
     id: str
@@ -59,6 +67,7 @@ class Parecer:
     status: Status
     regras_aplicadas: tuple[str, ...]
     justificativa: str
+    estado: Estado = Estado.APROVACAO_AUTOMATICA
 
     @property
     def valor_glosado(self) -> Decimal:

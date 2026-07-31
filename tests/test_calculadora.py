@@ -107,7 +107,7 @@ def test_calculadora_aplica_rn_013_apos_a_decisao():
     # sem competir com nenhuma regra de decisao anterior.
     d = despesa(id="e-007", categoria="hospedagem", data=date(2026, 7, 22), valor=Decimal("1200.00"))
     politica = politica_padrao(
-        centros_custo={"CC": {"hospedagem": LimiteCategoria(Decimal("600.00"))}},
+        centros_custo={"CC": {"hospedagem": LimiteCategoria(Decimal("400.00"))}},
     )
     resultado = calcular(_solicitacao([d]), politica, fabrica_cambio())
 

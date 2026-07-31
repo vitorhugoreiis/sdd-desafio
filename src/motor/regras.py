@@ -12,11 +12,12 @@ from dataclasses import replace
 from decimal import ROUND_HALF_UP, Decimal
 
 from src.motor.cambio import TabelaCambio
-from src.motor.modelo import Contexto, Despesa, Parecer, Status
+from src.motor.modelo import Contexto, Despesa, Estado, Parecer, Status
 from src.motor.politica import Politica
 
 ZERO = Decimal("0.00")
 DUAS_CASAS = Decimal("0.01")
+LIMITE_PENDENCIA_APROVACAO = Decimal("500.00")
 
 
 def normalizar_categoria(despesa: Despesa, contexto: Contexto | None = None) -> Despesa:
@@ -236,3 +237,17 @@ def rn_007_teto_categoria(despesa: Despesa, contexto: Contexto) -> Parecer:
             f"Excedente de R$ {excedente:.2f} glosado."
         ),
     )
+
+
+def rn_013_fila_aprovacao(parecer: Parecer, contexto: Contexto) -> Parecer:
+    """RN-013 (opcional, v4) — passo pós-decisão: valor reembolsável
+    estritamente acima de R$ 500,00 fica pendente de aprovação (AMB-024).
+    Nunca recusa, nunca altera valor ou status; estorno nunca fica pendente
+    (RN-005). É o único passo que opera sobre um `Parecer` já pronto, não
+    sobre uma `Despesa` — roda depois de toda a lista de decisão (spec §8,
+    passo 10)."""
+    if parecer.status == Status.ESTORNO:
+        return parecer
+    if parecer.valor_reembolsavel > LIMITE_PENDENCIA_APROVACAO:
+        return replace(parecer, estado=Estado.PENDENTE_APROVACAO)
+    return parecer

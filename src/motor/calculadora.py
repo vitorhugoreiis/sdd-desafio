@@ -6,7 +6,9 @@ aninhados (DT-002). Cada passo devolve `Parecer | Despesa | None` (DT-007):
 `None` segue para o próximo passo com a mesma despesa; `Despesa` segue para o
 próximo passo com a despesa transformada; `Parecer` encerra a despesa atual.
 `rn_007_teto_categoria` nunca devolve `None`, então o laço sempre para nela
-quando nenhum passo anterior decidiu.
+quando nenhum passo anterior decidiu. `rn_013_fila_aprovacao` (opcional,
+RN-013) roda depois, sobre o `Parecer` já pronto — é o passo 10 da spec §8 e
+não compete com os demais porque nunca recusa.
 """
 from src.motor.cambio import TabelaCambio
 from src.motor.modelo import Despesa, Parecer, Resultado, Solicitacao
@@ -21,6 +23,7 @@ from src.motor.regras import (
     rn_006_nota_fiscal,
     rn_007_teto_categoria,
     rn_011_conversao_cambial,
+    rn_013_fila_aprovacao,
 )
 
 
@@ -54,7 +57,7 @@ def calcular(solicitacao: Solicitacao, politica: Politica, tabela_cambio: Tabela
             if isinstance(resultado, Despesa):
                 despesa_atual = resultado
                 continue
-            pareceres.append(resultado)
+            pareceres.append(rn_013_fila_aprovacao(resultado, contexto))
             break
 
     return Resultado(solicitacao=solicitacao, politica=politica, pareceres=tuple(pareceres))
