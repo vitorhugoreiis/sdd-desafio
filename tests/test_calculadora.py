@@ -8,7 +8,8 @@ from datetime import date
 from decimal import Decimal
 
 from src.motor.calculadora import calcular, construir_passos
-from src.motor.modelo import Solicitacao, Status
+from src.motor.modelo import Estado, Solicitacao, Status
+from src.motor.politica import LimiteCategoria
 
 from tests.fabricas import despesa, politica_padrao
 from tests.fabricas import tabela_cambio as fabrica_cambio
@@ -99,6 +100,27 @@ def test_ordem_conversao_antes_da_nota_fiscal():
     parecer = resultado.pareceres[0]
     assert parecer.status == Status.RECUSADA
     assert "RN-006" in parecer.regras_aplicadas
+
+
+def test_calculadora_aplica_rn_013_apos_a_decisao():
+    # RN-013 (opcional): o passo pos-decisao roda depois do teto (passo 9),
+    # sem competir com nenhuma regra de decisao anterior.
+    d = despesa(id="e-007", categoria="hospedagem", data=date(2026, 7, 22), valor=Decimal("1200.00"))
+    politica = politica_padrao(
+        centros_custo={"CC": {"hospedagem": LimiteCategoria(Decimal("600.00"))}},
+    )
+    resultado = calcular(_solicitacao([d]), politica, fabrica_cambio())
+
+    parecer = resultado.pareceres[0]
+    assert parecer.valor_reembolsavel == Decimal("600.00")
+    assert parecer.estado == Estado.PENDENTE_APROVACAO
+
+
+def test_calculadora_rn_013_nao_afeta_item_abaixo_de_500():
+    d = despesa(id="d-1", valor=Decimal("50.00"))
+    resultado = _calcular([d])
+
+    assert resultado.pareceres[0].estado == Estado.APROVACAO_AUTOMATICA
 
 
 def test_pipeline_e_uma_lista_unica():

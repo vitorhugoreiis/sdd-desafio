@@ -11,7 +11,7 @@ import pytest
 
 from src.io.carregador import carregar
 from src.motor.calculadora import calcular
-from src.motor.modelo import Status
+from src.motor.modelo import Estado, Status
 from src.motor.politica import LimiteCategoria
 
 from tests.fabricas import politica_padrao, tabela_cambio
@@ -212,6 +212,21 @@ CASOS = [
             cambio=tabela_cambio(taxas={}),  # GBP nunca aparece
         ),
     ),
+    # --- fronteira de RN-013 (opcional, T-035) ---
+    (
+        "RN-013-exatamente-500-nao-fica-pendente",
+        [_d("d-1", "2026-07-03", "alimentacao", 500.00, True)],
+        lambda r: r.pareceres[0].estado == Estado.APROVACAO_AUTOMATICA
+        and r.pareceres[0].valor_reembolsavel == Decimal("500.00"),
+        dict(politica=politica_padrao(padrao={"alimentacao": LimiteCategoria(Decimal("1000.00"))})),
+    ),
+    (
+        "RN-013-um-centavo-acima-de-500-fica-pendente",
+        [_d("d-1", "2026-07-03", "alimentacao", 500.01, True)],
+        lambda r: r.pareceres[0].estado == Estado.PENDENTE_APROVACAO
+        and r.pareceres[0].valor_reembolsavel == Decimal("500.01"),
+        dict(politica=politica_padrao(padrao={"alimentacao": LimiteCategoria(Decimal("1000.00"))})),
+    ),
 ]
 
 
@@ -231,5 +246,5 @@ def test_casos_de_borda(tmp_path, caso):
     assert verificar(resultado)
 
 
-def test_casos_de_borda_cobre_as_22_linhas_da_spec():
-    assert len(CASOS) == 22
+def test_casos_de_borda_cobre_as_24_linhas_da_spec():
+    assert len(CASOS) == 24
