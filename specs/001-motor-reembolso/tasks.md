@@ -164,20 +164,20 @@ a ordem de aplicação da spec §8.
 
 > Absorve o bloco B do envelope, registrado em D-003 (`DECISIONS.md`).
 
-- [ ] **T-027** — `Despesa` ganha `moeda`, `valor_origem`, `taxa_cambio`, `data_taxa`. O carregador de despesas lê `moeda` como campo opcional, default `BRL`, normalizada (caixa/espaços)
+- [x] **T-027** — `Despesa` ganha `moeda`, `valor_origem`, `taxa_cambio`, `data_taxa`. O carregador de despesas lê `moeda` como campo opcional, default `BRL`, normalizada (caixa/espaços)
   - **Atende:** `spec.md` §4 (entrada), `plan.md` §3
   - **Aceite:** `test_carregador_moeda_ausente_assume_brl`, `test_carregador_normaliza_codigo_de_moeda`
-  - **Commit:** `<preencher>`
+  - **Commit:** `397f920` (test) / `1e94ffd` (feat)
 
-- [ ] **T-028** — `motor/cambio.py` puro: `TabelaCambio.taxa(moeda, data) -> tuple[Decimal, date] | None`, retrocedendo para a última data que tenha aquela moeda. `io/carregador_cambio.py` lê o documento de câmbio; CLI ganha `--cambio` opcional, mesmo padrão de default da T-026
+- [x] **T-028** — `motor/cambio.py` puro: `TabelaCambio.taxa(moeda, data) -> tuple[Decimal, date] | None`, retrocedendo para a última data que tenha aquela moeda. `io/carregador_cambio.py` lê o documento de câmbio
   - **Atende:** RN-011, AMB-018, AMB-019, `plan.md` DT-008
   - **Aceite:** `test_rn_011_taxa_da_data_exata`, `test_rn_011_data_sem_cotacao_usa_ultima_anterior`, `test_rn_011_sem_cotacao_anterior_recusa`
-  - **Commit:** `<preencher>`
+  - **Commit:** `ec5f166` (test) / `84f6b08` (feat) — **desvio:** o `--cambio` da CLI, aqui descrito, só fez sentido junto de T-029 (é onde `calcular()` passa a aceitar `TabelaCambio`); adicioná-lo antes deixaria uma flag sem efeito. Movido para T-029, registrado aqui para não maquiar a task original
 
-- [ ] **T-029** — Aplica DT-007: o passo do pipeline passa a devolver `Parecer | Despesa | None`; a calculadora passa a ter uma lista única de passos e `normalizar_categoria` (RN-002) entra nela como passo 2. `converter_para_brl` entra como passo 6
+- [x] **T-029** — Aplica DT-007: o passo do pipeline passa a devolver `Parecer | Despesa | None`; a calculadora passa a ter uma lista única de passos e `normalizar_categoria` (RN-002) entra nela como passo 2. `rn_011_conversao_cambial` entra como passo 6. CLI ganha `--cambio` opcional (mesmo padrão de default da T-026) — deslocado de T-028, ver nota acima
   - **Atende:** `spec.md` §8, `plan.md` DT-007
   - **Aceite:** `test_ordem_conversao_antes_da_nota_fiscal`, `test_pipeline_e_uma_lista_unica`
-  - **Commit:** `<preencher>`
+  - **Commit:** `4a2ef59` (test) / `5a45017` (feat)
 
 - [ ] **T-030** — RN-011 completa: converte o valor de origem pela taxa, arredonda uma única vez (RN-010 estendida, AMB-020), preenche `valor_origem`/`taxa_cambio`/`data_taxa` na `Despesa` resultante. Moeda sem cotação (AMB-019) recusa com valor `0.00` em BRL e origem preservada
   - **Atende:** RN-010, RN-011, AMB-020, AMB-023
