@@ -49,6 +49,7 @@ def test_e2e_envelope_cc_comercial():
     assert pareceres["e-006"].despesa.valor_origem == Decimal("55.00")
     assert pareceres["e-006"].despesa.moeda == "GBP"
     assert pareceres["e-007"].valor_reembolsavel == Decimal("600.00")  # teto 400 * 1.5 (viagem)
+    assert pareceres["e-007"].estado.value == "pendente_aprovacao"  # RN-013 (opcional): > 500
     assert pareceres["e-008"].valor_reembolsavel == Decimal("90.00")
     assert pareceres["e-009"].valor_reembolsavel == Decimal("0.00")  # coworking fora da politica
     assert pareceres["e-010"].valor_reembolsavel == Decimal("88.00")  # moeda ausente -> BRL

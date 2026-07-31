@@ -8,7 +8,7 @@ from datetime import date
 from decimal import Decimal
 
 from src.io.serializador import para_documento
-from src.motor.modelo import Parecer, Resultado, Solicitacao, Status
+from src.motor.modelo import Estado, Parecer, Resultado, Solicitacao, Status
 
 from tests.fabricas import despesa, politica_padrao
 
@@ -129,6 +129,23 @@ def test_serializa_bloco_politica_no_cabecalho_com_centro_de_custo():
     assert bloco["vigencia"] == politica.vigencia.isoformat()
     assert bloco["centro_custo_aplicado"] == "CC-ENG"
     assert bloco["origem_dos_limites"] == "centro_custo"
+
+
+def test_serializa_estado_do_item():
+    d = despesa(valor=Decimal("600.00"))
+    parecer = Parecer(
+        despesa=d,
+        valor_reembolsavel=d.valor,
+        status=Status.APROVADA,
+        regras_aplicadas=("RN-007",),
+        justificativa="ok",
+        estado=Estado.PENDENTE_APROVACAO,
+    )
+    resultado = Resultado(solicitacao=_solicitacao([d]), politica=politica_padrao(), pareceres=(parecer,))
+
+    item = para_documento(resultado)["itens"][0]
+
+    assert item["estado"] == "pendente_aprovacao"
 
 
 def test_serializa_bloco_politica_no_cabecalho_com_padrao():
