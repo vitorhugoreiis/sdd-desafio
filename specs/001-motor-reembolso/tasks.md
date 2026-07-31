@@ -140,25 +140,25 @@ a ordem de aplicação da spec §8.
 > Absorve o bloco A do envelope do Dia 2 (`exemplos/envelope/00-ENVELOPE-LACRADO.md`),
 > registrado em D-002 (`DECISIONS.md`). Derivado de `spec.md` 1.2 e `plan.md` 1.1.
 
-- [ ] **T-023** — `motor/politica.py` deixa de expor constantes e passa a expor `Politica` e `LimiteCategoria` (`@dataclass(frozen=True)`), com `limite(centro_custo, categoria) -> Decimal | None` fazendo o merge `{**padrao, **centros_custo.get(cc, {})}` e `categorias_cobertas(centro_custo)`
+- [x] **T-023** — `motor/politica.py` deixa de expor constantes e passa a expor `Politica` e `LimiteCategoria` (`@dataclass(frozen=True)`), com `limite(centro_custo, categoria) -> Decimal | None` fazendo o merge `{**padrao, **centros_custo.get(cc, {})}` e `categorias_cobertas(centro_custo)`
   - **Atende:** RN-012, AMB-013, AMB-014, `plan.md` §4
   - **Aceite:** `test_rn_012_cc_desconhecido_usa_padrao`, `test_rn_012_categoria_ausente_no_cc_herda_padrao`, `test_rn_012_cc_sobrepoe_o_padrao`
-  - **Commit:** `<preencher>`
+  - **Commit:** `21d8bba` (test) / `93e1737` (feat)
 
-- [ ] **T-024** — `io/carregador_politica.py`: lê o documento de política e monta uma `Politica`, com `parse_float=Decimal`, validação nomeando o campo ausente (mesmo padrão de `ErroDeEntrada` do `io/carregador.py`); `acrescimo_em_viagem_percentual: 50` vira fator `1.5`
+- [x] **T-024** — `io/carregador_politica.py`: lê o documento de política e monta uma `Politica`, com `parse_float=Decimal`, validação nomeando o campo ausente (mesmo padrão de `ErroDeEntrada` do `io/carregador.py`); `acrescimo_em_viagem_percentual: 50` vira fator `1.5`
   - **Atende:** `spec.md` §4 (documento de política), `plan.md` DT-008
   - **Aceite:** `test_carregador_politica_rejeita_campo_ausente`, `test_carregador_politica_converte_percentual_em_fator`
-  - **Commit:** `<preencher>`
+  - **Commit:** `cb11194` (test) / `9c7636d` (feat) — extraiu `io/erros.py` do `io/carregador.py` para reuso
 
-- [ ] **T-025** — `Contexto` ganha `centro_custo` e `politica`. RN-001 e RN-007 passam a consultar a política em vez de constantes; limite `0.00` recusa (RN-012, AMB-014); RN-009 lê o fator de viagem da política
+- [x] **T-025** — `Contexto` ganha `centro_custo` e `politica`. RN-001 e RN-007 passam a consultar a política em vez de constantes; limite `0.00` recusa (RN-012, AMB-014); RN-009 lê o fator de viagem da política
   - **Atende:** RN-001, RN-007, RN-009, RN-012
   - **Aceite:** `test_rn_012_limite_zero_recusa`, `test_rn_001_representacao_coberta_apenas_no_cc_comercial`, `test_rn_009_fator_vem_da_politica`
-  - **Commit:** `<preencher>`
+  - **Commit:** `06ab7d4` (test) / `36332db` (feat) — RN-006 também migrou (piso vem da política), necessário para o módulo compilar
 
-- [ ] **T-026** — CLI ganha `--politica` **opcional**, com default resolvido a partir da raiz do pacote (não do diretório de trabalho), apontando para a tabela vigente. Preserva o contrato fixo `calcular --input X --output Y` do `DESAFIO.md` — os casos ocultos do instrutor rodam sem flag nova
+- [x] **T-026** — CLI ganha `--politica` **opcional**, com default resolvido a partir da raiz do pacote (não do diretório de trabalho), apontando para a tabela vigente. Preserva o contrato fixo `calcular --input X --output Y` do `DESAFIO.md` — os casos ocultos do instrutor rodam sem flag nova
   - **Atende:** `DESAFIO.md` (contrato fixo da CLI), `plan.md` §1
   - **Aceite:** `test_cli_usa_politica_padrao_sem_flag`, `test_cli_aceita_politica_alternativa`
-  - **Commit:** `<preencher>`
+  - **Commit:** `6568b3b` (test) / `3396ed9` (feat)
 
 ## Fase 6 — Despesas internacionais (T-027..T-031)
 
