@@ -1,12 +1,12 @@
 """T-011 — RN-006: nota fiscal obrigatória, estritamente acima de R$ 100 (AMB-003..005)."""
 from decimal import Decimal
 
-from src.motor.modelo import Contexto, Status
+from src.motor.modelo import Status
 from src.motor.regras import rn_006_nota_fiscal
 
-from tests.fabricas import despesa
+from tests.fabricas import contexto, despesa
 
-CONTEXTO = Contexto(competencia="2026-07", datas_em_viagem=frozenset())
+CONTEXTO = contexto()
 
 
 def test_rn_006_piso_e_exclusivo():

@@ -13,6 +13,8 @@ from src.io.carregador import carregar
 from src.motor.calculadora import calcular
 from src.motor.modelo import Status
 
+from tests.fabricas import politica_padrao
+
 
 def _d(id, data, categoria, valor, nota, descricao="Despesa de teste", fornecedor="Fornecedor Teste"):
     return {
@@ -171,7 +173,7 @@ def test_casos_de_borda(tmp_path, despesas, verificar):
     caminho = tmp_path / "entrada.json"
     caminho.write_text(json.dumps(_entrada(despesas)), encoding="utf-8")
 
-    resultado = calcular(carregar(str(caminho)))
+    resultado = calcular(carregar(str(caminho)), politica_padrao())
 
     assert verificar(resultado)
 

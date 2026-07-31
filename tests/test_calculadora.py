@@ -5,7 +5,7 @@ from decimal import Decimal
 from src.motor.calculadora import calcular
 from src.motor.modelo import Solicitacao, Status
 
-from tests.fabricas import despesa
+from tests.fabricas import despesa, politica_padrao
 
 
 def _solicitacao(despesas, competencia="2026-07"):
@@ -18,9 +18,13 @@ def _solicitacao(despesas, competencia="2026-07"):
     )
 
 
+def _calcular(despesas, competencia="2026-07"):
+    return calcular(_solicitacao(despesas, competencia), politica_padrao())
+
+
 def test_ordem_nota_fiscal_antes_do_teto():
     d = despesa(id="d-004", categoria="transporte_urbano", valor=Decimal("100.01"), tem_nota_fiscal=False)
-    resultado = calcular(_solicitacao([d]))
+    resultado = _calcular([d])
 
     parecer = resultado.pareceres[0]
     assert parecer.valor_reembolsavel == Decimal("0.00")
@@ -31,14 +35,14 @@ def test_ordem_nota_fiscal_antes_do_teto():
 def test_calculadora_produz_um_parecer_por_despesa_na_mesma_ordem():
     d1 = despesa(id="d-1", valor=Decimal("10.00"))
     d2 = despesa(id="d-2", valor=Decimal("20.00"))
-    resultado = calcular(_solicitacao([d1, d2]))
+    resultado = _calcular([d1, d2])
 
     assert [p.despesa.id for p in resultado.pareceres] == ["d-1", "d-2"]
 
 
 def test_calculadora_normaliza_categoria_antes_de_decidir():
     d = despesa(id="d-014", categoria="ALIMENTACAO", valor=Decimal("61.00"))
-    resultado = calcular(_solicitacao([d]))
+    resultado = _calcular([d])
 
     parecer = resultado.pareceres[0]
     assert parecer.despesa.categoria == "alimentacao"
@@ -48,7 +52,7 @@ def test_calculadora_normaliza_categoria_antes_de_decidir():
 def test_calculadora_aplica_duplicata_entre_despesas_da_mesma_solicitacao():
     primeira = despesa(id="d-006", data=date(2026, 7, 9), fornecedor="Bistro Central", valor=Decimal("54.90"))
     segunda = despesa(id="d-007", data=date(2026, 7, 9), fornecedor="Bistro Central", valor=Decimal("54.90"))
-    resultado = calcular(_solicitacao([primeira, segunda]))
+    resultado = _calcular([primeira, segunda])
 
     assert resultado.pareceres[0].valor_reembolsavel == Decimal("54.90")
     assert resultado.pareceres[1].valor_reembolsavel == Decimal("0.00")
@@ -57,14 +61,14 @@ def test_calculadora_aplica_duplicata_entre_despesas_da_mesma_solicitacao():
 
 def test_calculadora_amplia_teto_em_data_de_viagem():
     hospedagem = despesa(id="d-010", data=date(2026, 7, 14), categoria="hospedagem", valor=Decimal("480.00"))
-    resultado = calcular(_solicitacao([hospedagem]))
+    resultado = _calcular([hospedagem])
 
     assert resultado.pareceres[0].valor_reembolsavel == Decimal("375.00")
 
 
 def test_calculadora_estorno_nao_e_afetado_por_teto():
     estorno = despesa(id="d-009", categoria="transporte_urbano", valor=Decimal("-500.00"))
-    resultado = calcular(_solicitacao([estorno]))
+    resultado = _calcular([estorno])
 
     assert resultado.pareceres[0].valor_reembolsavel == Decimal("-500.00")
     assert resultado.pareceres[0].status == Status.ESTORNO
